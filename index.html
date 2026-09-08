@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bitácora — Operaciones Comerciales</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Cinzel:wght@700&display=swap');
+    body { font-family: 'Space Grotesk', sans-serif; background-color: #0f1416; color: #e1e7e5; }
+    h1, h2, .brand-font { font-family: 'Cinzel', serif; }
+    .glass-card { background: rgba(22, 30, 33, 0.85); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); }
+    .accent-btn { background-color: #3b4e53; color: #ffffff; transition: all 0.2s; }
+    .accent-btn:hover { background-color: #4a6268; }
+    .sidebar-item-active { background-color: #2a383b; border-left: 4px solid #81a19f; color: #ffffff; }
+    .subtab-active { background-color: #3b4e53; color: #ffffff; border-bottom: 2px solid #34d399; }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+  <!-- BARRA LATERAL -->
+  <aside id="sidebar" class="w-64 glass-card flex flex-col justify-between p-4 z-10 overflow-y-auto transition-all duration-300">
+    <div>
+      
+      <!-- BOTÓN HAMBURGUESA Y TÍTULO -->
+      <div class="mb-4">
+        <div class="flex items-center justify-between p-2">
+          <!-- Botón Hamburguesa -->
+          <button onclick="toggleBitacoraMenu()" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-lg transition outline-none" title="Abrir/Cerrar Menú">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+
+          <div>
+            <h1 id="app-title" contenteditable="true" onblur="guardarTitulo()" class="text-xl font-bold tracking-wider text-slate-100 outline-none border-b border-transparent hover:border-slate-500 focus:border-emerald-400 cursor-pointer inline-block" title="Haz clic para editar el título">Bitácora</h1>
+            <p class="text-[10px] text-slate-400">Panel de operaciones</p>
+          </div>
+        </div>
+
+        <!-- Submenú Desplegable -->
+        <nav id="bitacora-submenu" class="mt-4 space-y-1 pl-2">
+          <button onclick="switchTab('resumen')" id="btn-resumen" class="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition sidebar-item-active">
+            <span class="font-bold text-xs uppercase tracking-widest text-slate-400">R</span>
+            <span>Resumen</span>
+          </button>
+          <button onclick="switchTab('clientes')" id="btn-clientes" class="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition">
+            <span class="font-bold text-xs uppercase tracking-widest text-slate-400">C</span>
+            <span>Clientes</span>
+          </button>
+          <button onclick="switchTab('proveedores')" id="btn-proveedores" class="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition">
+            <span class="font-bold text-xs uppercase tracking-widest text-slate-400">P</span>
+            <span>Proveedores</span>
+          </button>
+          <button onclick="switchTab('calendario')" id="btn-calendario" class="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition">
+            <span class="font-bold text-xs uppercase tracking-widest text-slate-400">K</span>
+            <span>Calendario</span>
+          </button>
+          <button onclick="switchTab('inventario')" id="btn-inventario" class="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition">
+            <span class="font-bold text-xs uppercase tracking-widest text-slate-400">I</span>
+            <span>Inventario</span>
+          </button>
+          <button onclick="switchTab('finanzas')" id="btn-finanzas" class="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition">
+            <span class="font-bold text-xs uppercase tracking-widest text-slate-400">$</span>
+            <span>Ventas y Compras</span>
+          </button>
+          <button onclick="switchTab('respaldos')" id="btn-respaldos" class="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition">
+            <span class="font-bold text-xs uppercase tracking-widest text-slate-400">E</span>
+            <span>Datos y Respaldos</span>
+          </button>
+        </nav>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 overflow-y-auto p-8 relative">
+
+    <!-- RESUMEN -->
+    <section id="tab-resumen" class="tab-content space-y-6">
+      <h2 class="text-3xl font-bold">Resumen Ejecutivo</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="glass-card p-4 rounded-xl">
+          <p class="text-xs uppercase text-slate-400 font-semibold">Total Ventas</p>
+          <p id="dash-ingresos" class="text-2xl font-bold text-emerald-400 mt-1">$0.00</p>
+        </div>
+        <div class="glass-card p-4 rounded-xl">
+          <p class="text-xs uppercase text-slate-400 font-semibold">Total Compras / Gastos</p>
+          <p id="dash-gastos" class="text-2xl font-bold text-rose-400 mt-1">$0.00</p>
+        </div>
+        <div class="glass-card p-4 rounded-xl">
+          <p class="text-xs uppercase text-slate-400 font-semibold">Utilidad Estimada</p>
+          <p id="dash-utilidad" class="text-2xl font-bold text-amber-400 mt-1">$0.00</p>
+        </div>
+        <div class="glass-card p-4 rounded-xl">
+          <p class="text-xs uppercase text-slate-400 font-semibold">Total Clientes</p>
+          <p id="dash-contactos" class="text-2xl font-bold text-slate-200 mt-1">0</p>
+        </div>
+      </div>
+      <div class="glass-card p-6 rounded-xl">
+        <h3 class="text-lg font-bold mb-4">Balance General</h3>
+        <canvas id="chartFinanzas" height="100"></canvas>
+      </div>
+    </section>
+
+    <!-- CLIENTES -->
+    <section id="tab-clientes" class="tab-content space-y-6 hidden">
+      <h2 class="text-3xl font-bold">Directorio de Clientes</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card p-6 rounded-xl space-y-4">
+          <h3 class="text-lg font-bold">Nuevo Cliente</h3>
+          <div>
+            <label class="text-xs text-slate-400">Nombre / Empresa</label>
+            <input type="text" id="cliente-nombre" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Teléfono</label>
+            <input type="text" id="cliente-telefono" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Correo Electrónico</label>
+            <input type="email" id="cliente-correo" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Notas / Preferencias</label>
+            <textarea id="cliente-notas" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1 h-20"></textarea>
+          </div>
+          <button onclick="guardarCliente()" class="w-full accent-btn py-2 rounded text-sm font-semibold">Guardar Cliente</button>
+        </div>
+
+        <div class="md:col-span-2 glass-card p-6 rounded-xl">
+          <h3 class="text-lg font-bold mb-4">Lista de Clientes</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+              <thead class="text-xs uppercase bg-slate-800 text-slate-400">
+                <tr>
+                  <th class="p-2">Nombre</th>
+                  <th class="p-2">Teléfono</th>
+                  <th class="p-2">Correo</th>
+                  <th class="p-2">Notas</th>
+                  <th class="p-2">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-clientes" class="divide-y divide-slate-800"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROVEEDORES -->
+    <section id="tab-proveedores" class="tab-content space-y-6 hidden">
+      <h2 class="text-3xl font-bold">Directorio de Proveedores</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card p-6 rounded-xl space-y-4">
+          <h3 class="text-lg font-bold">Nuevo Proveedor</h3>
+          <div>
+            <label class="text-xs text-slate-400">Nombre / Empresa</label>
+            <input type="text" id="prov-nombre" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Teléfono</label>
+            <input type="text" id="prov-telefono" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Página Web</label>
+            <input type="url" id="prov-web" placeholder="https://ejemplo.com" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">¿Tiene Ubicación Física en Aguascalientes?</label>
+            <select id="prov-ags" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+              <option value="Sí">Sí</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Dirección Línea 1</label>
+            <input type="text" id="prov-dir1" placeholder="Calle y número" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Dirección Línea 2</label>
+            <input type="text" id="prov-dir2" placeholder="Colonia / Código Postal" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Dirección Línea 3</label>
+            <input type="text" id="prov-dir3" placeholder="Ciudad / Estado / Referencia" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <button onclick="guardarProveedor()" class="w-full accent-btn py-2 rounded text-sm font-semibold">Guardar Proveedor</button>
+        </div>
+
+        <div class="md:col-span-2 glass-card p-6 rounded-xl">
+          <h3 class="text-lg font-bold mb-4">Lista de Proveedores</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+              <thead class="text-xs uppercase bg-slate-800 text-slate-400">
+                <tr>
+                  <th class="p-2">Proveedor</th>
+                  <th class="p-2">Teléfono / Web</th>
+                  <th class="p-2">Física en Ags</th>
+                  <th class="p-2">Direcciones</th>
+                  <th class="p-2">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-proveedores" class="divide-y divide-slate-800"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CALENDARIO -->
+    <section id="tab-calendario" class="tab-content space-y-6 hidden">
+      <h2 class="text-3xl font-bold">Agenda y Calendario de Eventos</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card p-6 rounded-xl space-y-4">
+          <h3 class="text-lg font-bold">Agendar Cita / Evento</h3>
+          <div>
+            <label class="text-xs text-slate-400">Fecha del Evento</label>
+            <input type="date" id="cal-fecha" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Hora</label>
+            <input type="time" id="cal-hora" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Cliente / Proveedor Asociado</label>
+            <select id="cal-contacto" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1"></select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Asunto / Título</label>
+            <input type="text" id="cal-asunto" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Detalles / Acuerdos</label>
+            <textarea id="cal-detalles" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1 h-20"></textarea>
+          </div>
+          <button onclick="guardarEvento()" class="w-full accent-btn py-2 rounded text-sm font-semibold">Guardar Evento</button>
+        </div>
+
+        <div class="md:col-span-2 glass-card p-6 rounded-xl">
+          <h3 class="text-lg font-bold mb-4">Eventos Programados</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+              <thead class="text-xs uppercase bg-slate-800 text-slate-400">
+                <tr>
+                  <th class="p-2">Fecha y Hora</th>
+                  <th class="p-2">Contacto</th>
+                  <th class="p-2">Asunto</th>
+                  <th class="p-2">Detalles</th>
+                  <th class="p-2">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-calendario" class="divide-y divide-slate-800"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INVENTARIO -->
+    <section id="tab-inventario" class="tab-content space-y-6 hidden">
+      <h2 class="text-3xl font-bold">Control de Inventario</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card p-6 rounded-xl space-y-4">
+          <h3 class="text-lg font-bold">Nuevo Producto</h3>
+          <div>
+            <label class="text-xs text-slate-400">Nombre del Producto</label>
+            <input type="text" id="inv-nombre" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Cantidad en Stock</label>
+            <input type="number" id="inv-stock" min="0" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Precio Unitario ($)</label>
+            <input type="number" step="0.01" id="inv-precio" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <button onclick="guardarInventario()" class="w-full accent-btn py-2 rounded text-sm font-semibold">Agregar Producto</button>
+        </div>
+
+        <div class="md:col-span-2 glass-card p-6 rounded-xl">
+          <h3 class="text-lg font-bold mb-4">Existencias</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+              <thead class="text-xs uppercase bg-slate-800 text-slate-400">
+                <tr>
+                  <th class="p-2">Producto</th>
+                  <th class="p-2">Stock</th>
+                  <th class="p-2">Precio</th>
+                  <th class="p-2">Ajustar</th>
+                  <th class="p-2">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-inventario" class="divide-y divide-slate-800"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VENTAS Y COMPRAS -->
+    <section id="tab-finanzas" class="tab-content space-y-6 hidden">
+      <h2 class="text-3xl font-bold">Ventas y Compras</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card p-6 rounded-xl space-y-4">
+          <h3 class="text-lg font-bold">Registrar Movimiento</h3>
+          <div>
+            <label class="text-xs text-slate-400">Tipo de Movimiento</label>
+            <select id="fin-tipo" onchange="toggleCamposIngreso()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+              <option value="Venta">Venta (Ingreso)</option>
+              <option value="Compra">Compra a Proveedor (Gasto)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Fecha</label>
+            <input type="date" id="fin-fecha" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Producto del Inventario</label>
+            <select id="fin-producto" onchange="actualizarPrecioYStockMax()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1"></select>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-400">Cantidad</label>
+              <input type="number" id="fin-cantidad" min="1" value="1" oninput="actualizarMontoPorCantidad()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Precio Unitario ($)</label>
+              <input type="number" step="0.01" id="fin-precio-unitario" oninput="actualizarMontoPorCantidad()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Monto Total ($)</label>
+            <input type="number" step="0.01" id="fin-monto" readonly class="w-full bg-slate-900/50 border border-slate-800 text-slate-400 rounded p-2 text-sm mt-1 font-bold">
+          </div>
+          
+          <div id="wrapper-vendedor" class="space-y-4">
+            <div>
+              <label class="text-xs text-slate-400">Vendedor</label>
+              <input type="text" id="fin-vendedor" placeholder="Nombre del vendedor" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">Porcentaje de Utilidad</label>
+              <select id="fin-utilidad-pct" onchange="calcularUtilidad()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm mt-1">
+                <option value="0">0%</option>
+                <option value="5">5%</option>
+                <option value="10">10%</option>
+                <option value="15" selected>15%</option>
+                <option value="16">16%</option>
+                <option value="20">20%</option>
+              </select>
+            </div>
+            <div class="p-2 bg-slate-900/60 rounded border border-slate-800 text-xs flex justify-between">
+              <span class="text-slate-400">Utilidad calculada ($):</span>
+              <span id="lbl-utilidad-monto" class="font-bold text-amber-400">$0.00</span>
+            </div>
+          </div>
+
+          <button onclick="guardarFinanza()" class="w-full accent-btn py-2 rounded text-sm font-semibold">Guardar Registro</button>
+        </div>
+
+        <div class="md:col-span-2 glass-card p-6 rounded-xl space-y-4">
+          <!-- Pestañas de Navegación entre Ventas y Compras -->
+          <div class="flex border-b border-slate-700 space-x-2">
+            <button id="btn-subtab-ventas" onclick="switchSubtabFinanzas('ventas')" class="py-2 px-4 text-sm font-semibold rounded-t-lg subtab-active">
+              🛒 Ventas (Ingresos)
+            </button>
+            <button id="btn-subtab-compras" onclick="switchSubtabFinanzas('compras')" class="py-2 px-4 text-sm font-semibold text-slate-400 hover:text-slate-200 transition rounded-t-lg">
+              📦 Compras (Gastos)
+            </button>
+          </div>
+
+          <!-- APARTADO DE VENTAS -->
+          <div id="subtab-ventas" class="space-y-4">
+            <div class="flex justify-between items-center bg-emerald-950/40 p-3 rounded-lg border border-emerald-800/40">
+              <div>
+                <span class="text-xs text-slate-400 block uppercase">Total Ventas</span>
+                <span id="total-ventas-monto" class="text-xl font-bold text-emerald-400">$0.00</span>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-slate-400 block uppercase">Ganancia Total (Utilidad)</span>
+                <span id="total-ventas-ganancia" class="text-xl font-bold text-amber-400">$0.00</span>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm text-slate-300">
+                <thead class="text-xs uppercase bg-slate-800 text-slate-400">
+                  <tr>
+                    <th class="p-2">Fecha</th>
+                    <th class="p-2">Producto / Cant.</th>
+                    <th class="p-2">Vendedor</th>
+                    <th class="p-2">Venta Total</th>
+                    <th class="p-2">Ganancia</th>
+                    <th class="p-2">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-ventas" class="divide-y divide-slate-800"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- APARTADO DE COMPRAS -->
+          <div id="subtab-compras" class="space-y-4 hidden">
+            <div class="grid grid-cols-3 gap-3 bg-rose-950/40 p-3 rounded-lg border border-rose-800/40 text-center">
+              <div>
+                <span class="text-xs text-slate-400 block uppercase">Total Gastos Brutos</span>
+                <span id="total-compras-monto" class="text-lg font-bold text-rose-400">$0.00</span>
+              </div>
+              <div>
+                <span class="text-xs text-slate-400 block uppercase">(- Utilidades Restadas)</span>
+                <span id="total-compras-utilidad" class="text-lg font-bold text-amber-400">$0.00</span>
+              </div>
+              <div>
+                <span class="text-xs text-slate-400 block uppercase font-semibold">Total Real Neto</span>
+                <span id="total-compras-neto" class="text-lg font-bold text-emerald-400">$0.00</span>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm text-slate-300">
+                <thead class="text-xs uppercase bg-slate-800 text-slate-400">
+                  <tr>
+                    <th class="p-2">Fecha</th>
+                    <th class="p-2">Producto / Cant.</th>
+                    <th class="p-2">Monto Total</th>
+                    <th class="p-2">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-compras" class="divide-y divide-slate-800"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- RESPALDOS Y DATOS -->
+    <section id="tab-respaldos" class="tab-content space-y-6 hidden">
+      <h2 class="text-3xl font-bold">Gestión de Datos y Respaldos</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <div class="glass-card p-6 rounded-xl space-y-4">
+          <h3 class="text-lg font-bold text-amber-400">Copia de Seguridad (Sincronización Manual)</h3>
+          <p class="text-xs text-slate-400">Descarga un archivo con toda la base de datos de tu CRM para guardarlo o abrirlo en cualquier otra computadora.</p>
+
+          <button onclick="descargarBaseDatosJSON()" class="accent-btn w-full py-2.5 rounded text-sm font-semibold flex items-center justify-center space-x-2">
+            <span>⬇ Descargar Copia de Seguridad (.json)</span>
+          </button>
+
+          <div class="border-t border-slate-800 pt-4 space-y-2">
+            <label class="text-xs text-slate-400 block">Cargar/Restaurar Copia de Seguridad:</label>
+            <input type="file" id="input-subir-json" accept=".json" class="w-full text-xs text-slate-400 bg-slate-900 p-2 rounded border border-slate-700">
+            <button onclick="cargarBaseDatosJSON()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white py-2 rounded text-sm font-semibold">
+              ⬆ Cargar / Restaurar Datos
+            </button>
+          </div>
+        </div>
+
+        <div class="glass-card p-6 rounded-xl space-y-4">
+          <h3 class="text-lg font-bold text-sky-400">Exportar Reportes a Excel</h3>
+          <p class="text-xs text-slate-400">Descarga reportes individuales de tus tablas para abrirlos en Microsoft Excel.</p>
+          <button onclick="exportarFinanzasCSV()" class="accent-btn w-full py-2 rounded text-sm font-semibold">Descargar Ventas y Compras (CSV)</button>
+          <button onclick="exportarClientesCSV()" class="accent-btn w-full py-2 rounded text-sm font-semibold">Descargar Lista de Clientes (CSV)</button>
+          <button onclick="exportarProveedoresCSV()" class="accent-btn w-full py-2 rounded text-sm font-semibold">Descargar Lista de Proveedores (CSV)</button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let db = JSON.parse(localStorage.getItem('crm_db_v2')) || {
+      titulo: 'Bitácora',
+      clientes: [],
+      proveedores: [],
+      calendario: [],
+      inventario: [],
+      finanzas: []
+    };
+    let chartInstance = null;
+
+    function saveDb() {
+      localStorage.setItem('crm_db_v2', JSON.stringify(db));
+    }
+
+    function guardarTitulo() {
+      const el = document.getElementById('app-title');
+      const nuevoTitulo = el.innerText.trim() || 'Bitácora';
+      el.innerText = nuevoTitulo;
+      db.titulo = nuevoTitulo;
+      document.title = `${nuevoTitulo} — Operaciones Comerciales`;
+      saveDb();
+    }
+
+    function toggleBitacoraMenu() {
+      const submenu = document.getElementById('bitacora-submenu');
+      submenu.classList.toggle('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (db.titulo) {
+        document.getElementById('app-title').innerText = db.titulo;
+        document.title = `${db.titulo} — Operaciones Comerciales`;
+      }
+      const hoy = new Date().toISOString().split('T')[0];
+      document.getElementById('cal-fecha').value = hoy;
+      document.getElementById('fin-fecha').value = hoy;
+      renderAll();
+    });
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('sidebar-item-active'));
+      document.getElementById(`btn-${tabId}`).classList.add('sidebar-item-active');
+      if(tabId === 'resumen') updateDashboard();
+    }
+
+    function switchSubtabFinanzas(tipo) {
+      const btnVentas = document.getElementById('btn-subtab-ventas');
+      const btnCompras = document.getElementById('btn-subtab-compras');
+      const subtabVentas = document.getElementById('subtab-ventas');
+      const subtabCompras = document.getElementById('subtab-compras');
+
+      if (tipo === 'ventas') {
+        subtabVentas.classList.remove('hidden');
+        subtabCompras.classList.add('hidden');
+        btnVentas.classList.add('subtab-active');
+        btnVentas.classList.remove('text-slate-400');
+        btnCompras.classList.remove('subtab-active');
+        btnCompras.classList.add('text-slate-400');
+      } else {
+        subtabCompras.classList.remove('hidden');
+        subtabVentas.classList.add('hidden');
+        btnCompras.classList.add('subtab-active');
+        btnCompras.classList.remove('text-slate-400');
+        btnVentas.classList.remove('subtab-active');
+        btnVentas.classList.add('text-slate-400');
+      }
+    }
+
+    function renderAll() {
+      renderClientes();
+      renderProveedores();
+      renderCalendario();
+      renderInventario();
+      actualizarSelectProductos();
+      renderFinanzas();
+      updateDashboard();
+      actualizarSelectsContactos();
+    }
+
+    // --- CLIENTES ---
+    function guardarCliente() {
+      const nombre = document.getElementById('cliente-nombre').value.trim();
+      const telefono = document.getElementById('cliente-telefono').value.trim();
+      const correo = document.getElementById('cliente-correo').value.trim();
+      const notas = document.getElementById('cliente-notas').value.trim();
+
+      if (!nombre) return alert('El nombre es obligatorio.');
+
+      db.clientes.push({ id: Date.now(), nombre, telefono, correo, notas });
+      saveDb();
+      renderClientes();
+      actualizarSelectsContactos();
+
+      document.getElementById('cliente-nombre').value = '';
+      document.getElementById('cliente-telefono').value = '';
+      document.getElementById('cliente-correo').value = '';
+      document.getElementById('cliente-notas').value = '';
+    }
+
+    function eliminarCliente(id) {
+      db.clientes = db.clientes.filter(c => c.id !== id);
+      saveDb();
+      renderClientes();
+      actualizarSelectsContactos();
+    }
+
+    function renderClientes() {
+      const tbody = document.getElementById('tabla-clientes');
+      tbody.innerHTML = '';
+      db.clientes.forEach(c => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-800/50">
+            <td class="p-2 font-medium">${c.nombre}</td>
+            <td class="p-2">${c.telefono}</td>
+            <td class="p-2">${c.correo}</td>
+            <td class="p-2 text-xs text-slate-400">${c.notas}</td>
+            <td class="p-2"><button onclick="eliminarCliente(${c.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    // --- PROVEEDORES ---
+    function guardarProveedor() {
+      const nombre = document.getElementById('prov-nombre').value.trim();
+      const telefono = document.getElementById('prov-telefono').value.trim();
+      const web = document.getElementById('prov-web').value.trim();
+      const ags = document.getElementById('prov-ags').value;
+      const dir1 = document.getElementById('prov-dir1').value.trim();
+      const dir2 = document.getElementById('prov-dir2').value.trim();
+      const dir3 = document.getElementById('prov-dir3').value.trim();
+
+      if (!nombre) return alert('El nombre del proveedor es obligatorio.');
+
+      db.proveedores.push({ id: Date.now(), nombre, telefono, web, ags, dir1, dir2, dir3 });
+      saveDb();
+      renderProveedores();
+      actualizarSelectsContactos();
+
+      document.getElementById('prov-nombre').value = '';
+      document.getElementById('prov-telefono').value = '';
+      document.getElementById('prov-web').value = '';
+      document.getElementById('prov-dir1').value = '';
+      document.getElementById('prov-dir2').value = '';
+      document.getElementById('prov-dir3').value = '';
+    }
+
+    function eliminarProveedor(id) {
+      db.proveedores = db.proveedores.filter(p => p.id !== id);
+      saveDb();
+      renderProveedores();
+      actualizarSelectsContactos();
+    }
+
+    function renderProveedores() {
+      const tbody = document.getElementById('tabla-proveedores');
+      tbody.innerHTML = '';
+      db.proveedores.forEach(p => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-800/50">
+            <td class="p-2 font-medium">${p.nombre}</td>
+            <td class="p-2 text-xs">
+              <div>${p.telefono || '-'}</div>
+              ${p.web ? `<a href="${p.web}" target="_blank" class="text-sky-400 hover:underline">Sitio Web</a>` : ''}
+            </td>
+            <td class="p-2">${p.ags}</td>
+            <td class="p-2 text-xs text-slate-400">
+              ${[p.dir1, p.dir2, p.dir3].filter(Boolean).join(', ') || '-'}
+            </td>
+            <td class="p-2"><button onclick="eliminarProveedor(${p.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    // --- CALENDARIO ---
+    function actualizarSelectsContactos() {
+      const select = document.getElementById('cal-contacto');
+      select.innerHTML = '<option value="">Sin contacto asignado</option>';
+      db.clientes.forEach(c => select.innerHTML += `<option value="Cliente: ${c.nombre}">Cliente: ${c.nombre}</option>`);
+      db.proveedores.forEach(p => select.innerHTML += `<option value="Proveedor: ${p.nombre}">Proveedor: ${p.nombre}</option>`);
+    }
+
+    function guardarEvento() {
+      const fecha = document.getElementById('cal-fecha').value;
+      const hora = document.getElementById('cal-hora').value;
+      const contacto = document.getElementById('cal-contacto').value;
+      const asunto = document.getElementById('cal-asunto').value.trim();
+      const detalles = document.getElementById('cal-detalles').value.trim();
+
+      if (!fecha || !asunto) return alert('La fecha y el asunto son requeridos.');
+
+      db.calendario.push({ id: Date.now(), fecha, hora, contacto, asunto, detalles });
+      saveDb();
+      renderCalendario();
+
+      document.getElementById('cal-asunto').value = '';
+      document.getElementById('cal-detalles').value = '';
+    }
+
+    function eliminarEvento(id) {
+      db.calendario = db.calendario.filter(e => e.id !== id);
+      saveDb();
+      renderCalendario();
+    }
+
+    function renderCalendario() {
+      const tbody = document.getElementById('tabla-calendario');
+      tbody.innerHTML = '';
+      db.calendario.forEach(e => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-800/50">
+            <td class="p-2 font-medium">${e.fecha} ${e.hora || ''}</td>
+            <td class="p-2 text-xs text-slate-300">${e.contacto || '-'}</td>
+            <td class="p-2">${e.asunto}</td>
+            <td class="p-2 text-xs text-slate-400">${e.detalles}</td>
+            <td class="p-2"><button onclick="eliminarEvento(${e.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    // --- INVENTARIO ---
+    function guardarInventario() {
+      const nombre = document.getElementById('inv-nombre').value.trim();
+      const stock = parseInt(document.getElementById('inv-stock').value) || 0;
+      const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
+
+      if (!nombre) return alert('El nombre del producto es obligatorio.');
+
+      db.inventario.push({ id: Date.now(), nombre, stock, precio });
+      saveDb();
+      renderInventario();
+      actualizarSelectProductos();
+
+      document.getElementById('inv-nombre').value = '';
+      document.getElementById('inv-stock').value = '';
+      document.getElementById('inv-precio').value = '';
+    }
+
+    function ajustarStock(id, cambio) {
+      const prod = db.inventario.find(p => p.id === id);
+      if (prod) {
+        prod.stock = Math.max(0, prod.stock + cambio);
+        saveDb();
+        renderInventario();
+      }
+    }
+
+    function eliminarInventario(id) {
+      db.inventario = db.inventario.filter(i => i.id !== id);
+      saveDb();
+      renderInventario();
+      actualizarSelectProductos();
+    }
+
+    function renderInventario() {
+      const tbody = document.getElementById('tabla-inventario');
+      tbody.innerHTML = '';
+      db.inventario.forEach(i => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-800/50">
+            <td class="p-2 font-medium">${i.nombre}</td>
+            <td class="p-2 font-bold ${i.stock <= 3 ? 'text-amber-400' : ''}">${i.stock}</td>
+            <td class="p-2">$${i.precio.toFixed(2)}</td>
+            <td class="p-2 space-x-1">
+              <button onclick="ajustarStock(${i.id}, -1)" class="px-2 py-0.5 bg-slate-800 rounded hover:bg-slate-700">-</button>
+              <button onclick="ajustarStock(${i.id}, 1)" class="px-2 py-0.5 bg-slate-800 rounded hover:bg-slate-700">+</button>
+            </td>
+            <td class="p-2"><button onclick="eliminarInventario(${i.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    // --- VENTAS Y COMPRAS ---
+    function actualizarSelectProductos() {
+      const select = document.getElementById('fin-producto');
+      select.innerHTML = '<option value="">Selecciona un producto</option>';
+      db.inventario.forEach(p => select.innerHTML += `<option value="${p.id}">${p.nombre} (Stock: ${p.stock})</option>`);
+    }
+
+    function actualizarPrecioYStockMax() {
+      const prodId = parseInt(document.getElementById('fin-producto').value);
+      const prod = db.inventario.find(p => p.id === prodId);
+      if (prod) {
+        document.getElementById('fin-precio-unitario').value = prod.precio;
+        actualizarMontoPorCantidad();
+      }
+    }
+
+    function actualizarMontoPorCantidad() {
+      const cant = parseInt(document.getElementById('fin-cantidad').value) || 0;
+      const precio = parseFloat(document.getElementById('fin-precio-unitario').value) || 0;
+      document.getElementById('fin-monto').value = (cant * precio).toFixed(2);
+      calcularUtilidad();
+    }
+
+    function calcularUtilidad() {
+      const monto = parseFloat(document.getElementById('fin-monto').value) || 0;
+      const pct = parseFloat(document.getElementById('fin-utilidad-pct').value) || 0;
+      const utilidad = (monto * (pct / 100)).toFixed(2);
+      document.getElementById('lbl-utilidad-monto').innerText = `$${utilidad}`;
+    }
+
+    function toggleCamposIngreso() {
+      const tipo = document.getElementById('fin-tipo').value;
+      const wrapperVendedor = document.getElementById('wrapper-vendedor');
+      if (tipo === 'Compra') {
+        wrapperVendedor.classList.add('hidden');
+      } else {
+        wrapperVendedor.classList.remove('hidden');
+      }
+    }
+
+    function guardarFinanza() {
+      const tipo = document.getElementById('fin-tipo').value;
+      const fecha = document.getElementById('fin-fecha').value;
+      const prodId = parseInt(document.getElementById('fin-producto').value);
+      const cantidad = parseInt(document.getElementById('fin-cantidad').value) || 0;
+      const precioUnitario = parseFloat(document.getElementById('fin-precio-unitario').value) || 0;
+      const monto = parseFloat(document.getElementById('fin-monto').value) || 0;
+
+      if (!fecha || !prodId || cantidad <= 0) return alert('Por favor, ingresa información válida.');
+
+      const prod = db.inventario.find(p => p.id === prodId);
+      
+      if (tipo === 'Venta' && prod.stock < cantidad) {
+        return alert(`Stock insuficiente. Solo quedan ${prod.stock} unidades de ${prod.nombre}.`);
+      }
+
+      let vendedor = '';
+      let utilidadPct = 0;
+      let ganancia = 0;
+
+      if (tipo === 'Venta') {
+        vendedor = document.getElementById('fin-vendedor').value.trim();
+        utilidadPct = parseFloat(document.getElementById('fin-utilidad-pct').value) || 0;
+        ganancia = (monto * (utilidadPct / 100));
+        prod.stock -= cantidad;
+      } else {
+        prod.stock += cantidad;
+      }
+
+      db.finanzas.push({
+        id: Date.now(),
+        tipo,
+        fecha,
+        producto: prod.nombre,
+        cantidad,
+        precioUnitario,
+        monto,
+        vendedor,
+        utilidadPct,
+        ganancia
+      });
+
+      saveDb();
+      renderAll();
+
+      document.getElementById('fin-vendedor').value = '';
+      document.getElementById('fin-cantidad').value = '1';
+      document.getElementById('fin-monto').value = '';
+    }
+
+    function eliminarFinanza(id) {
+      db.finanzas = db.finanzas.filter(f => f.id !== id);
+      saveDb();
+      renderFinanzas();
+      updateDashboard();
+    }
+
+    function renderFinanzas() {
+      const tbodyVentas = document.getElementById('tabla-ventas');
+      const tbodyCompras = document.getElementById('tabla-compras');
+      tbodyVentas.innerHTML = '';
+      tbodyCompras.innerHTML = '';
+
+      let totalVentas = 0;
+      let totalGanancias = 0;
+      let totalCompras = 0;
+
+      db.finanzas.forEach(f => {
+        if (f.tipo === 'Venta') {
+          totalVentas += f.monto;
+          totalGanancias += f.ganancia || 0;
+          tbodyVentas.innerHTML += `
+            <tr class="hover:bg-slate-800/50">
+              <td class="p-2 text-xs">${f.fecha}</td>
+              <td class="p-2 font-medium">${f.producto} (x${f.cantidad})</td>
+              <td class="p-2 text-xs">${f.vendedor || '-'}</td>
+              <td class="p-2 font-semibold text-emerald-400">$${f.monto.toFixed(2)}</td>
+              <td class="p-2 text-amber-400 font-semibold">$${(f.ganancia || 0).toFixed(2)}</td>
+              <td class="p-2"><button onclick="eliminarFinanza(${f.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
+            </tr>
+          `;
+        } else {
+          totalCompras += f.monto;
+          tbodyCompras.innerHTML += `
+            <tr class="hover:bg-slate-800/50">
+              <td class="p-2 text-xs">${f.fecha}</td>
+              <td class="p-2 font-medium">${f.producto} (x${f.cantidad})</td>
+              <td class="p-2 font-semibold text-rose-400">$${f.monto.toFixed(2)}</td>
+              <td class="p-2"><button onclick="eliminarFinanza(${f.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
+            </tr>
+          `;
+        }
+      });
+
+      document.getElementById('total-ventas-monto').innerText = `$${totalVentas.toFixed(2)}`;
+      document.getElementById('total-ventas-ganancia').innerText = `$${totalGanancias.toFixed(2)}`;
+      
+      document.getElementById('total-compras-monto').innerText = `$${totalCompras.toFixed(2)}`;
+      document.getElementById('total-compras-utilidad').innerText = `$${totalGanancias.toFixed(2)}`;
+      document.getElementById('total-compras-neto').innerText = `$${(totalCompras - totalGanancias).toFixed(2)}`;
+    }
+
+    // --- RESPALDOS Y REPORTES ---
+    function descargarBaseDatosJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `crm_backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function cargarBaseDatosJSON() {
+      const fileInput = document.getElementById('input-subir-json');
+      if (!fileInput.files.length) return alert('Selecciona un archivo JSON primero.');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          db = JSON.parse(e.target.result);
+          saveDb();
+          renderAll();
+          alert('Copia de seguridad cargada correctamente.');
+        } catch (err) {
+          alert('Error al leer el archivo JSON.');
+        }
+      };
+      reader.readAsText(fileInput.files[0]);
+    }
+
+    function exportarFinanzasCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,Tipo,Fecha,Producto,Cantidad,Precio Unitario,Monto Total,Vendedor,Utilidad Pct,Ganancia\n";
+      db.finanzas.forEach(f => {
+        csvContent += `"${f.tipo}","${f.fecha}","${f.producto}",${f.cantidad},${f.precioUnitario},${f.monto},"${f.vendedor || ''}",${f.utilidadPct || 0},${f.ganancia || 0}\n`;
+      });
+      descargarCSV(csvContent, "reporte_ventas_compras.csv");
+    }
+
+    function exportarClientesCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,Nombre,Teléfono,Correo,Notas\n";
+      db.clientes.forEach(c => {
+        csvContent += `"${c.nombre}","${c.telefono}","${c.correo}","${c.notas}"\n`;
+      });
+      descargarCSV(csvContent, "directorio_clientes.csv");
+    }
+
+    function exportarProveedoresCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,Nombre,Teléfono,Web,Física Ags,Dirección 1,Dirección 2,Dirección 3\n";
+      db.proveedores.forEach(p => {
+        csvContent += `"${p.nombre}","${p.telefono}","${p.web}","${p.ags}","${p.dir1}","${p.dir2}","${p.dir3}"\n`;
+      });
+      descargarCSV(csvContent, "directorio_proveedores.csv");
+    }
+
+    function descargarCSV(content, filename) {
+      const encodedUri = encodeURI(content);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    // --- RESUMEN Y GRÁFICAS ---
+    function updateDashboard() {
+      let totalVentas = 0;
+      let totalCompras = 0;
+      let totalGanancias = 0;
+
+      db.finanzas.forEach(f => {
+        if (f.tipo === 'Venta') {
+          totalVentas += f.monto;
+          totalGanancias += f.ganancia || 0;
+        } else {
+          totalCompras += f.monto;
+        }
+      });
+
+      document.getElementById('dash-ingresos').innerText = `$${totalVentas.toFixed(2)}`;
+      document.getElementById('dash-gastos').innerText = `$${totalCompras.toFixed(2)}`;
+      document.getElementById('dash-utilidad').innerText = `$${totalGanancias.toFixed(2)}`;
+      document.getElementById('dash-contactos').innerText = db.clientes.length;
+
+      renderGrafica(totalVentas, totalCompras, totalGanancias);
+    }
+
+    function renderGrafica(ventas, compras, ganancia) {
+      const ctx = document.getElementById('chartFinanzas').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Ventas Totales', 'Compras/Gastos', 'Utilidad Generada'],
+          datasets: [{
+            label: 'Monto ($)',
+            data: [ventas, compras, ganancia],
+            backgroundColor: ['#34d399', '#f87171', '#fbbf24'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+            x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
