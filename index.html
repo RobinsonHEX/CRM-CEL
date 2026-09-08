@@ -17,25 +17,26 @@
     .subtab-active { background-color: #3b4e53; color: #ffffff; border-bottom: 2px solid #34d399; }
   </style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body class="flex h-screen overflow-hidden relative">
+
+  <!-- BOTÓN HAMBURGUESA FLOTANTE (Permanece accesible cuando la barra se oculta) -->
+  <button onclick="toggleSidebar()" class="fixed top-4 left-4 z-30 p-2.5 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl border border-slate-700/60 shadow-lg backdrop-blur-md transition-all outline-none" title="Mostrar/Ocultar Menú">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+  </button>
 
   <!-- BARRA LATERAL -->
-  <aside class="w-64 glass-card flex flex-col justify-between p-4 z-10 overflow-y-auto">
+  <aside id="sidebar" class="w-64 glass-card flex flex-col justify-between p-4 z-20 overflow-y-auto transition-all duration-300 ease-in-out shrink-0 pt-16">
     <div>
-      
-      <!-- MENU DESPLEGABLE BITÁCORA -->
       <div class="mb-4">
-        <!-- Botón del Desplegable -->
-        <button onclick="toggleBitacoraMenu()" class="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-800/60 transition group text-left outline-none">
-          <div>
-            <h1 id="app-title" contenteditable="true" onclick="event.stopPropagation();" onblur="guardarTitulo()" class="text-2xl font-bold tracking-wider text-slate-100 outline-none border-b border-transparent hover:border-slate-500 focus:border-emerald-400 cursor-pointer inline-block" title="Haz clic para editar el título">Bitácora</h1>
-            <p class="text-xs text-slate-400">Panel de operaciones comerciales</p>
-          </div>
-          <span id="bitacora-arrow" class="text-slate-400 text-xs transition-transform duration-200 transform rotate-180">▼</span>
-        </button>
+        <div class="px-2 pb-2 border-b border-slate-800/80">
+          <h1 id="app-title" contenteditable="true" onblur="guardarTitulo()" class="text-xl font-bold tracking-wider text-slate-100 outline-none border-b border-transparent hover:border-slate-500 focus:border-emerald-400 cursor-pointer inline-block" title="Haz clic para editar el título">Bitácora</h1>
+          <p class="text-[10px] text-slate-400">Panel de operaciones</p>
+        </div>
 
-        <!-- Submenú Desplegable -->
-        <nav id="bitacora-submenu" class="mt-2 space-y-1 pl-2">
+        <!-- Menú de Navegación -->
+        <nav id="bitacora-submenu" class="mt-4 space-y-1">
           <button onclick="switchTab('resumen')" id="btn-resumen" class="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition sidebar-item-active">
             <span class="font-bold text-xs uppercase tracking-widest text-slate-400">R</span>
             <span>Resumen</span>
@@ -66,12 +67,11 @@
           </button>
         </nav>
       </div>
-
     </div>
   </aside>
 
   <!-- CONTENIDO PRINCIPAL -->
-  <main class="flex-1 overflow-y-auto p-8 relative">
+  <main class="flex-1 overflow-y-auto p-8 relative pt-16">
 
     <!-- RESUMEN -->
     <section id="tab-resumen" class="tab-content space-y-6">
@@ -492,12 +492,13 @@
       saveDb();
     }
 
-    function toggleBitacoraMenu() {
-      const submenu = document.getElementById('bitacora-submenu');
-      const arrow = document.getElementById('bitacora-arrow');
-      
-      submenu.classList.toggle('hidden');
-      arrow.classList.toggle('rotate-180');
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('w-64');
+      sidebar.classList.toggle('w-0');
+      sidebar.classList.toggle('p-4');
+      sidebar.classList.toggle('p-0');
+      sidebar.classList.toggle('overflow-hidden');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
