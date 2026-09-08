@@ -20,27 +20,22 @@
 <body class="flex h-screen overflow-hidden">
 
   <!-- BARRA LATERAL -->
-  <aside id="sidebar" class="w-64 glass-card flex flex-col justify-between p-4 z-10 overflow-y-auto transition-all duration-300">
+  <aside class="w-64 glass-card flex flex-col justify-between p-4 z-10 overflow-y-auto">
     <div>
       
-      <!-- BOTÓN HAMBURGUESA Y TÍTULO -->
+      <!-- MENU DESPLEGABLE BITÁCORA -->
       <div class="mb-4">
-        <div class="flex items-center justify-between p-2">
-          <!-- Botón Hamburguesa -->
-          <button onclick="toggleBitacoraMenu()" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-lg transition outline-none" title="Abrir/Cerrar Menú">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-          </button>
-
+        <!-- Botón del Desplegable -->
+        <button onclick="toggleBitacoraMenu()" class="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-800/60 transition group text-left outline-none">
           <div>
-            <h1 id="app-title" contenteditable="true" onblur="guardarTitulo()" class="text-xl font-bold tracking-wider text-slate-100 outline-none border-b border-transparent hover:border-slate-500 focus:border-emerald-400 cursor-pointer inline-block" title="Haz clic para editar el título">Bitácora</h1>
-            <p class="text-[10px] text-slate-400">Panel de operaciones</p>
+            <h1 id="app-title" contenteditable="true" onclick="event.stopPropagation();" onblur="guardarTitulo()" class="text-2xl font-bold tracking-wider text-slate-100 outline-none border-b border-transparent hover:border-slate-500 focus:border-emerald-400 cursor-pointer inline-block" title="Haz clic para editar el título">Bitácora</h1>
+            <p class="text-xs text-slate-400">Panel de operaciones comerciales</p>
           </div>
-        </div>
+          <span id="bitacora-arrow" class="text-slate-400 text-xs transition-transform duration-200 transform rotate-180">▼</span>
+        </button>
 
         <!-- Submenú Desplegable -->
-        <nav id="bitacora-submenu" class="mt-4 space-y-1 pl-2">
+        <nav id="bitacora-submenu" class="mt-2 space-y-1 pl-2">
           <button onclick="switchTab('resumen')" id="btn-resumen" class="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition sidebar-item-active">
             <span class="font-bold text-xs uppercase tracking-widest text-slate-400">R</span>
             <span>Resumen</span>
@@ -499,7 +494,10 @@
 
     function toggleBitacoraMenu() {
       const submenu = document.getElementById('bitacora-submenu');
+      const arrow = document.getElementById('bitacora-arrow');
+      
       submenu.classList.toggle('hidden');
+      arrow.classList.toggle('rotate-180');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -639,11 +637,13 @@
             <td class="p-2 font-medium">${p.nombre}</td>
             <td class="p-2 text-xs">
               <div>${p.telefono || '-'}</div>
-              ${p.web ? `<a href="${p.web}" target="_blank" class="text-sky-400 hover:underline">Sitio Web</a>` : ''}
+              ${p.web ? `<a href="${p.web}" target="_blank" class="text-sky-400 hover:underline">${p.web}</a>` : ''}
             </td>
-            <td class="p-2">${p.ags}</td>
+            <td class="p-2 text-xs font-semibold ${p.ags === 'Sí' ? 'text-emerald-400' : 'text-slate-400'}">${p.ags}</td>
             <td class="p-2 text-xs text-slate-400">
-              ${[p.dir1, p.dir2, p.dir3].filter(Boolean).join(', ') || '-'}
+              ${p.dir1 ? `<div>1: ${p.dir1}</div>` : ''}
+              ${p.dir2 ? `<div>2: ${p.dir2}</div>` : ''}
+              ${p.dir3 ? `<div>3: ${p.dir3}</div>` : ''}
             </td>
             <td class="p-2"><button onclick="eliminarProveedor(${p.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
           </tr>
@@ -652,13 +652,6 @@
     }
 
     // --- CALENDARIO ---
-    function actualizarSelectsContactos() {
-      const select = document.getElementById('cal-contacto');
-      select.innerHTML = '<option value="">Sin contacto asignado</option>';
-      db.clientes.forEach(c => select.innerHTML += `<option value="Cliente: ${c.nombre}">Cliente: ${c.nombre}</option>`);
-      db.proveedores.forEach(p => select.innerHTML += `<option value="Proveedor: ${p.nombre}">Proveedor: ${p.nombre}</option>`);
-    }
-
     function guardarEvento() {
       const fecha = document.getElementById('cal-fecha').value;
       const hora = document.getElementById('cal-hora').value;
@@ -666,9 +659,9 @@
       const asunto = document.getElementById('cal-asunto').value.trim();
       const detalles = document.getElementById('cal-detalles').value.trim();
 
-      if (!fecha || !asunto) return alert('La fecha y el asunto son requeridos.');
+      if (!asunto || !fecha) return alert('Ingresa fecha y asunto.');
 
-      db.calendario.push({ id: Date.now(), fecha, hora, contacto, asunto, detalles });
+      db.calendario.push({ id: Date.now(), fecha, hora: hora || 'Todo el día', contacto: contacto || 'General', asunto, detalles });
       saveDb();
       renderCalendario();
 
@@ -685,28 +678,43 @@
     function renderCalendario() {
       const tbody = document.getElementById('tabla-calendario');
       tbody.innerHTML = '';
-      db.calendario.forEach(e => {
+      db.calendario.forEach(ev => {
         tbody.innerHTML += `
           <tr class="hover:bg-slate-800/50">
-            <td class="p-2 font-medium">${e.fecha} ${e.hora || ''}</td>
-            <td class="p-2 text-xs text-slate-300">${e.contacto || '-'}</td>
-            <td class="p-2">${e.asunto}</td>
-            <td class="p-2 text-xs text-slate-400">${e.detalles}</td>
-            <td class="p-2"><button onclick="eliminarEvento(${e.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
+            <td class="p-2 text-xs text-slate-400">${ev.fecha} (${ev.hora})</td>
+            <td class="p-2 font-medium">${ev.contacto}</td>
+            <td class="p-2 font-semibold text-slate-200">${ev.asunto}</td>
+            <td class="p-2 text-xs text-slate-400">${ev.detalles}</td>
+            <td class="p-2"><button onclick="eliminarEvento(${ev.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
           </tr>
         `;
       });
     }
 
+    function actualizarSelectsContactos() {
+      const selectCal = document.getElementById('cal-contacto');
+      selectCal.innerHTML = '<option value="">-- Ninguno / General --</option>';
+
+      db.clientes.forEach(c => selectCal.innerHTML += `<option value="Cliente: ${c.nombre}">Cliente: ${c.nombre}</option>`);
+      db.proveedores.forEach(p => selectCal.innerHTML += `<option value="Proveedor: ${p.nombre}">Proveedor: ${p.nombre}</option>`);
+    }
+
     // --- INVENTARIO ---
     function guardarInventario() {
       const nombre = document.getElementById('inv-nombre').value.trim();
-      const stock = parseInt(document.getElementById('inv-stock').value) || 0;
-      const precio = parseFloat(document.getElementById('inv-precio').value) || 0;
+      const stock = parseInt(document.getElementById('inv-stock').value);
+      const precio = parseFloat(document.getElementById('inv-precio').value);
 
-      if (!nombre) return alert('El nombre del producto es obligatorio.');
+      if (!nombre || isNaN(stock) || isNaN(precio)) return alert('Completa los datos.');
 
-      db.inventario.push({ id: Date.now(), nombre, stock, precio });
+      const productoExistente = db.inventario.find(i => i.nombre.toLowerCase() === nombre.toLowerCase());
+      if (productoExistente) {
+        productoExistente.stock += stock;
+        productoExistente.precio = precio;
+      } else {
+        db.inventario.push({ id: Date.now(), nombre, stock, precio });
+      }
+
       saveDb();
       renderInventario();
       actualizarSelectProductos();
@@ -716,12 +724,32 @@
       document.getElementById('inv-precio').value = '';
     }
 
-    function ajustarStock(id, cambio) {
-      const prod = db.inventario.find(p => p.id === id);
-      if (prod) {
-        prod.stock = Math.max(0, prod.stock + cambio);
+    function modificarStock(id, cantidad) {
+      const item = db.inventario.find(i => i.id === id);
+      if (item) {
+        item.stock += cantidad;
+        if (item.stock < 0) item.stock = 0;
         saveDb();
         renderInventario();
+        actualizarSelectProductos();
+      }
+    }
+
+    function modificarPrecio(id) {
+      const item = db.inventario.find(i => i.id === id);
+      if (item) {
+        const nuevoPrecioStr = prompt(`Ingrese el nuevo precio para "${item.nombre}":`, item.precio);
+        if (nuevoPrecioStr !== null) {
+          const nuevoPrecio = parseFloat(nuevoPrecioStr);
+          if (!isNaN(nuevoPrecio) && nuevoPrecio >= 0) {
+            item.precio = nuevoPrecio;
+            saveDb();
+            renderInventario();
+            actualizarSelectProductos();
+          } else {
+            alert('Por favor ingrese un precio válido.');
+          }
+        }
       }
     }
 
@@ -739,11 +767,16 @@
         tbody.innerHTML += `
           <tr class="hover:bg-slate-800/50">
             <td class="p-2 font-medium">${i.nombre}</td>
-            <td class="p-2 font-bold ${i.stock <= 3 ? 'text-amber-400' : ''}">${i.stock}</td>
-            <td class="p-2">$${i.precio.toFixed(2)}</td>
-            <td class="p-2 space-x-1">
-              <button onclick="ajustarStock(${i.id}, -1)" class="px-2 py-0.5 bg-slate-800 rounded hover:bg-slate-700">-</button>
-              <button onclick="ajustarStock(${i.id}, 1)" class="px-2 py-0.5 bg-slate-800 rounded hover:bg-slate-700">+</button>
+            <td class="p-2">${i.stock} pza(s)</td>
+            <td class="p-2 font-bold text-emerald-400">
+              $${i.precio.toFixed(2)}
+              <button onclick="modificarPrecio(${i.id})" title="Editar precio" class="ml-2 text-xs text-sky-400 hover:underline font-normal">✏️</button>
+            </td>
+            <td class="p-2">
+              <div class="inline-flex space-x-1">
+                <button onclick="modificarStock(${i.id}, 1)" class="bg-slate-700 hover:bg-slate-600 text-xs px-2 py-1 rounded font-bold text-emerald-400">+</button>
+                <button onclick="modificarStock(${i.id}, -1)" class="bg-slate-700 hover:bg-slate-600 text-xs px-2 py-1 rounded font-bold text-rose-400">-</button>
+              </div>
             </td>
             <td class="p-2"><button onclick="eliminarInventario(${i.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
           </tr>
@@ -751,94 +784,114 @@
       });
     }
 
-    // --- VENTAS Y COMPRAS ---
+    // --- FINANZAS (VENTAS Y COMPRAS) ---
     function actualizarSelectProductos() {
       const select = document.getElementById('fin-producto');
-      select.innerHTML = '<option value="">Selecciona un producto</option>';
-      db.inventario.forEach(p => select.innerHTML += `<option value="${p.id}">${p.nombre} (Stock: ${p.stock})</option>`);
+      select.innerHTML = '<option value="">-- Seleccionar Producto --</option>';
+      db.inventario.forEach(prod => {
+        select.innerHTML += `<option value="${prod.id}">${prod.nombre} (Stock: ${prod.stock})</option>`;
+      });
+      actualizarPrecioYStockMax();
     }
 
     function actualizarPrecioYStockMax() {
       const prodId = parseInt(document.getElementById('fin-producto').value);
-      const prod = db.inventario.find(p => p.id === prodId);
-      if (prod) {
-        document.getElementById('fin-precio-unitario').value = prod.precio;
-        actualizarMontoPorCantidad();
+      const tipo = document.getElementById('fin-tipo').value;
+      const inputCant = document.getElementById('fin-cantidad');
+      const inputPrecio = document.getElementById('fin-precio-unitario');
+      
+      const producto = db.inventario.find(p => p.id === prodId);
+
+      if (producto) {
+        inputPrecio.value = producto.precio;
+        if (tipo === 'Venta') {
+          inputCant.max = producto.stock;
+          if (parseInt(inputCant.value) > producto.stock) {
+            inputCant.value = producto.stock > 0 ? producto.stock : 1;
+          }
+        } else {
+          inputCant.removeAttribute('max');
+        }
+      } else {
+        inputPrecio.value = '';
+        inputCant.removeAttribute('max');
       }
+      actualizarMontoPorCantidad();
     }
 
     function actualizarMontoPorCantidad() {
       const cant = parseInt(document.getElementById('fin-cantidad').value) || 0;
       const precio = parseFloat(document.getElementById('fin-precio-unitario').value) || 0;
-      document.getElementById('fin-monto').value = (cant * precio).toFixed(2);
+      const total = cant * precio;
+      document.getElementById('fin-monto').value = total.toFixed(2);
       calcularUtilidad();
+    }
+
+    function toggleCamposIngreso() {
+      const tipo = document.getElementById('fin-tipo').value;
+      const wrapper = document.getElementById('wrapper-vendedor');
+      if (tipo === 'Compra') wrapper.classList.add('hidden');
+      else wrapper.classList.remove('hidden');
+      actualizarPrecioYStockMax();
     }
 
     function calcularUtilidad() {
       const monto = parseFloat(document.getElementById('fin-monto').value) || 0;
       const pct = parseFloat(document.getElementById('fin-utilidad-pct').value) || 0;
-      const utilidad = (monto * (pct / 100)).toFixed(2);
-      document.getElementById('lbl-utilidad-monto').innerText = `$${utilidad}`;
-    }
-
-    function toggleCamposIngreso() {
-      const tipo = document.getElementById('fin-tipo').value;
-      const wrapperVendedor = document.getElementById('wrapper-vendedor');
-      if (tipo === 'Compra') {
-        wrapperVendedor.classList.add('hidden');
-      } else {
-        wrapperVendedor.classList.remove('hidden');
-      }
+      const utilidadMonto = monto * (pct / 100);
+      document.getElementById('lbl-utilidad-monto').innerText = `$${utilidadMonto.toFixed(2)}`;
+      return utilidadMonto;
     }
 
     function guardarFinanza() {
       const tipo = document.getElementById('fin-tipo').value;
       const fecha = document.getElementById('fin-fecha').value;
       const prodId = parseInt(document.getElementById('fin-producto').value);
-      const cantidad = parseInt(document.getElementById('fin-cantidad').value) || 0;
-      const precioUnitario = parseFloat(document.getElementById('fin-precio-unitario').value) || 0;
-      const monto = parseFloat(document.getElementById('fin-monto').value) || 0;
+      const cantidad = parseInt(document.getElementById('fin-cantidad').value);
+      const precioUnitario = parseFloat(document.getElementById('fin-precio-unitario').value);
+      const monto = parseFloat(document.getElementById('fin-monto').value);
+      const vendedor = document.getElementById('fin-vendedor').value.trim();
+      const pct = parseFloat(document.getElementById('fin-utilidad-pct').value);
 
-      if (!fecha || !prodId || cantidad <= 0) return alert('Por favor, ingresa información válida.');
-
-      const prod = db.inventario.find(p => p.id === prodId);
-      
-      if (tipo === 'Venta' && prod.stock < cantidad) {
-        return alert(`Stock insuficiente. Solo quedan ${prod.stock} unidades de ${prod.nombre}.`);
+      if (!prodId || isNaN(cantidad) || cantidad <= 0 || isNaN(monto) || !fecha) {
+        return alert('Selecciona un producto y una cantidad válida.');
       }
 
-      let vendedor = '';
-      let utilidadPct = 0;
-      let ganancia = 0;
+      const producto = db.inventario.find(p => p.id === prodId);
+      if (!producto) return alert('Producto no encontrado.');
 
       if (tipo === 'Venta') {
-        vendedor = document.getElementById('fin-vendedor').value.trim();
-        utilidadPct = parseFloat(document.getElementById('fin-utilidad-pct').value) || 0;
-        ganancia = (monto * (utilidadPct / 100));
-        prod.stock -= cantidad;
+        if (cantidad > producto.stock) {
+          return alert(`Stock insuficiente. Solo tienes ${producto.stock} unidades de ${producto.nombre}.`);
+        }
+        producto.stock -= cantidad;
       } else {
-        prod.stock += cantidad;
+        producto.stock += cantidad;
       }
+
+      let utilidadCalculada = tipo === 'Venta' ? monto * (pct / 100) : 0;
 
       db.finanzas.push({
         id: Date.now(),
-        tipo,
         fecha,
-        producto: prod.nombre,
+        tipo,
+        concepto: `${producto.nombre} (x${cantidad})`,
         cantidad,
-        precioUnitario,
         monto,
-        vendedor,
-        utilidadPct,
-        ganancia
+        vendedor: tipo === 'Venta' ? (vendedor || 'N/A') : '-',
+        utilidadPct: tipo === 'Venta' ? pct : 0,
+        utilidadMonto: utilidadCalculada
       });
 
       saveDb();
-      renderAll();
+      renderInventario();
+      actualizarSelectProductos();
+      renderFinanzas();
+      updateDashboard();
 
+      document.getElementById('fin-cantidad').value = 1;
       document.getElementById('fin-vendedor').value = '';
-      document.getElementById('fin-cantidad').value = '1';
-      document.getElementById('fin-monto').value = '';
+      actualizarMontoPorCantidad();
     }
 
     function eliminarFinanza(id) {
@@ -851,160 +904,152 @@
     function renderFinanzas() {
       const tbodyVentas = document.getElementById('tabla-ventas');
       const tbodyCompras = document.getElementById('tabla-compras');
+
       tbodyVentas.innerHTML = '';
       tbodyCompras.innerHTML = '';
 
       let totalVentas = 0;
-      let totalGanancias = 0;
+      let totalGananciaVentas = 0;
       let totalCompras = 0;
 
       db.finanzas.forEach(f => {
         if (f.tipo === 'Venta') {
           totalVentas += f.monto;
-          totalGanancias += f.ganancia || 0;
+          totalGananciaVentas += (f.utilidadMonto || 0);
+
           tbodyVentas.innerHTML += `
             <tr class="hover:bg-slate-800/50">
-              <td class="p-2 text-xs">${f.fecha}</td>
-              <td class="p-2 font-medium">${f.producto} (x${f.cantidad})</td>
-              <td class="p-2 text-xs">${f.vendedor || '-'}</td>
-              <td class="p-2 font-semibold text-emerald-400">$${f.monto.toFixed(2)}</td>
-              <td class="p-2 text-amber-400 font-semibold">$${(f.ganancia || 0).toFixed(2)}</td>
+              <td class="p-2 text-slate-400 text-xs">${f.fecha}</td>
+              <td class="p-2 font-medium">${f.concepto}</td>
+              <td class="p-2 text-slate-300">${f.vendedor || '-'}</td>
+              <td class="p-2 font-bold text-emerald-400">$${f.monto.toFixed(2)}</td>
+              <td class="p-2 text-xs text-amber-400 font-bold">
+                $${(f.utilidadMonto || 0).toFixed(2)} <span class="text-slate-500 font-normal">(${f.utilidadPct || 0}%)</span>
+              </td>
               <td class="p-2"><button onclick="eliminarFinanza(${f.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
             </tr>
           `;
         } else {
           totalCompras += f.monto;
+
           tbodyCompras.innerHTML += `
             <tr class="hover:bg-slate-800/50">
-              <td class="p-2 text-xs">${f.fecha}</td>
-              <td class="p-2 font-medium">${f.producto} (x${f.cantidad})</td>
-              <td class="p-2 font-semibold text-rose-400">$${f.monto.toFixed(2)}</td>
+              <td class="p-2 text-slate-400 text-xs">${f.fecha}</td>
+              <td class="p-2 font-medium">${f.concepto}</td>
+              <td class="p-2 font-bold text-rose-400">$${f.monto.toFixed(2)}</td>
               <td class="p-2"><button onclick="eliminarFinanza(${f.id})" class="text-rose-400 hover:underline text-xs">Eliminar</button></td>
             </tr>
           `;
         }
       });
 
+      const totalComprasNeto = totalCompras - totalGananciaVentas;
+
       document.getElementById('total-ventas-monto').innerText = `$${totalVentas.toFixed(2)}`;
-      document.getElementById('total-ventas-ganancia').innerText = `$${totalGanancias.toFixed(2)}`;
+      document.getElementById('total-ventas-ganancia').innerText = `$${totalGananciaVentas.toFixed(2)}`;
       
       document.getElementById('total-compras-monto').innerText = `$${totalCompras.toFixed(2)}`;
-      document.getElementById('total-compras-utilidad').innerText = `$${totalGanancias.toFixed(2)}`;
-      document.getElementById('total-compras-neto').innerText = `$${(totalCompras - totalGanancias).toFixed(2)}`;
+      document.getElementById('total-compras-utilidad').innerText = `$${totalGananciaVentas.toFixed(2)}`;
+      document.getElementById('total-compras-neto').innerText = `$${totalComprasNeto.toFixed(2)}`;
     }
 
-    // --- RESPALDOS Y REPORTES ---
-    function descargarBaseDatosJSON() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `crm_backup_${new Date().toISOString().split('T')[0]}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    }
-
-    function cargarBaseDatosJSON() {
-      const fileInput = document.getElementById('input-subir-json');
-      if (!fileInput.files.length) return alert('Selecciona un archivo JSON primero.');
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          db = JSON.parse(e.target.result);
-          saveDb();
-          renderAll();
-          alert('Copia de seguridad cargada correctamente.');
-        } catch (err) {
-          alert('Error al leer el archivo JSON.');
-        }
-      };
-      reader.readAsText(fileInput.files[0]);
-    }
-
-    function exportarFinanzasCSV() {
-      let csvContent = "data:text/csv;charset=utf-8,Tipo,Fecha,Producto,Cantidad,Precio Unitario,Monto Total,Vendedor,Utilidad Pct,Ganancia\n";
-      db.finanzas.forEach(f => {
-        csvContent += `"${f.tipo}","${f.fecha}","${f.producto}",${f.cantidad},${f.precioUnitario},${f.monto},"${f.vendedor || ''}",${f.utilidadPct || 0},${f.ganancia || 0}\n`;
-      });
-      descargarCSV(csvContent, "reporte_ventas_compras.csv");
-    }
-
-    function exportarClientesCSV() {
-      let csvContent = "data:text/csv;charset=utf-8,Nombre,Teléfono,Correo,Notas\n";
-      db.clientes.forEach(c => {
-        csvContent += `"${c.nombre}","${c.telefono}","${c.correo}","${c.notas}"\n`;
-      });
-      descargarCSV(csvContent, "directorio_clientes.csv");
-    }
-
-    function exportarProveedoresCSV() {
-      let csvContent = "data:text/csv;charset=utf-8,Nombre,Teléfono,Web,Física Ags,Dirección 1,Dirección 2,Dirección 3\n";
-      db.proveedores.forEach(p => {
-        csvContent += `"${p.nombre}","${p.telefono}","${p.web}","${p.ags}","${p.dir1}","${p.dir2}","${p.dir3}"\n`;
-      });
-      descargarCSV(csvContent, "directorio_proveedores.csv");
-    }
-
-    function descargarCSV(content, filename) {
-      const encodedUri = encodeURI(content);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    }
-
-    // --- RESUMEN Y GRÁFICAS ---
+    // --- DASHBOARD ---
     function updateDashboard() {
-      let totalVentas = 0;
-      let totalCompras = 0;
-      let totalGanancias = 0;
+      const ingresos = db.finanzas.filter(f => f.tipo === 'Venta').reduce((a, b) => a + b.monto, 0);
+      const gastos = db.finanzas.filter(f => f.tipo === 'Compra').reduce((a, b) => a + b.monto, 0);
+      const utilidadTotal = db.finanzas.filter(f => f.tipo === 'Venta').reduce((a, b) => a + (b.utilidadMonto || 0), 0);
 
-      db.finanzas.forEach(f => {
-        if (f.tipo === 'Venta') {
-          totalVentas += f.monto;
-          totalGanancias += f.ganancia || 0;
-        } else {
-          totalCompras += f.monto;
-        }
-      });
-
-      document.getElementById('dash-ingresos').innerText = `$${totalVentas.toFixed(2)}`;
-      document.getElementById('dash-gastos').innerText = `$${totalCompras.toFixed(2)}`;
-      document.getElementById('dash-utilidad').innerText = `$${totalGanancias.toFixed(2)}`;
+      document.getElementById('dash-ingresos').innerText = `$${ingresos.toFixed(2)}`;
+      document.getElementById('dash-gastos').innerText = `$${gastos.toFixed(2)}`;
+      document.getElementById('dash-utilidad').innerText = `$${utilidadTotal.toFixed(2)}`;
       document.getElementById('dash-contactos').innerText = db.clientes.length;
 
-      renderGrafica(totalVentas, totalCompras, totalGanancias);
-    }
-
-    function renderGrafica(ventas, compras, ganancia) {
       const ctx = document.getElementById('chartFinanzas').getContext('2d');
       if (chartInstance) chartInstance.destroy();
 
       chartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['Ventas Totales', 'Compras/Gastos', 'Utilidad Generada'],
+          labels: ['Ventas', 'Compras/Gastos', 'Utilidad'],
           datasets: [{
-            label: 'Monto ($)',
-            data: [ventas, compras, ganancia],
-            backgroundColor: ['#34d399', '#f87171', '#fbbf24'],
-            borderRadius: 6
+            data: [ingresos, gastos, utilidadTotal],
+            backgroundColor: ['#34d399', '#f87171', '#fbbf24']
           }]
         },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-            x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
-          }
-        }
+        options: { responsive: true, plugins: { legend: { display: false } } }
       });
+    }
+
+    // --- RESPALDOS JSON Y CSV ---
+    function descargarBaseDatosJSON() {
+      const jsonStr = JSON.stringify(db, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `CRM_Respaldo_${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+    }
+
+    function cargarBaseDatosJSON() {
+      const fileInput = document.getElementById('input-subir-json');
+      if (!fileInput.files.length) return alert('Por favor selecciona un archivo .json');
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.clientes && parsed.proveedores && parsed.finanzas) {
+            db = parsed;
+            if (db.titulo) document.getElementById('app-title').innerText = db.titulo;
+            saveDb();
+            renderAll();
+            alert('¡Base de datos cargada y restaurada con éxito!');
+          } else {
+            alert('El archivo cargado no tiene la estructura correcta del CRM.');
+          }
+        } catch (err) {
+          alert('Error al leer el archivo JSON.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function exportarFinanzasCSV() {
+      if(db.finanzas.length === 0) return alert('Sin datos.');
+      let csv = 'Fecha,Tipo,Concepto,Vendedor,Monto,Utilidad_Pct,Utilidad_Monto\n';
+      db.finanzas.forEach(f => {
+        csv += `"${f.fecha}","${f.tipo}","${f.concepto}","${f.vendedor || '-'}","${f.monto}","${f.utilidadPct || 0}%","${f.utilidadMonto || 0}"\n`;
+      });
+      descargarCSV(csv, `ventas_y_compras.csv`);
+    }
+
+    function exportarClientesCSV() {
+      if(db.clientes.length === 0) return alert('Sin datos.');
+      let csv = 'Nombre,Telefono,Correo,Notas\n';
+      db.clientes.forEach(c => {
+        csv += `"${c.nombre}","${c.telefono}","${c.correo}","${c.notas}"\n`;
+      });
+      descargarCSV(csv, `clientes.csv`);
+    }
+
+    function exportarProveedoresCSV() {
+      if(db.proveedores.length === 0) return alert('Sin datos.');
+      let csv = 'Nombre,Telefono,Web,Fisica_Ags,Dir1,Dir2,Dir3\n';
+      db.proveedores.forEach(p => {
+        csv += `"${p.nombre}","${p.telefono}","${p.web}","${p.ags}","${p.dir1}","${p.dir2}","${p.dir3}"\n`;
+      });
+      descargarCSV(csv, `proveedores.csv`);
+    }
+
+    function descargarCSV(contenido, nombreArchivo) {
+      const blob = new Blob(["\uFEFF" + contenido], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = nombreArchivo;
+      link.click();
     }
   </script>
 </body>
