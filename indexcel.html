@@ -1,18 +1,167 @@
-<!-- Botón Hamburguesa -->
-<button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
-  ☰
-</button>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Navegación Móvil</title>
+  <style>
+    /* Estilos generales */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
 
-<!-- Menú Lateral -->
-<nav class="mobile-nav" id="mobileNav">
-  <button class="close-btn" id="closeBtn" aria-label="Cerrar menú">&times;</button>
-  <ul class="nav-list">
-    <li><a href="#inicio" class="nav-link">Inicio</a></li>
-    <li><a href="#bitacora" class="nav-link">Bitácora</a></li>
-    <li><a href="#operaciones" class="nav-link">Operaciones</a></li>
-    <li><a href="#contacto" class="nav-link">Contacto</a></li>
-  </ul>
-</nav>
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #333;
+      color: white;
+    }
 
-<!-- Overlay de fondo para cerrar al tocar fuera -->
-<div class="overlay" id="overlay"></div>
+    /* Botón Hamburguesa */
+    .menu-toggle {
+      font-size: 24px;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 5px 10px;
+    }
+
+    /* Menú Lateral (Drawer) */
+    .mobile-nav {
+      position: fixed;
+      top: 0;
+      right: -260px; /* Oculto a la derecha */
+      width: 250px;
+      height: 100vh;
+      background-color: #ffffff;
+      box-shadow: -2px 0 8px rgba(0,0,0,0.25);
+      transition: right 0.3s ease-in-out;
+      z-index: 1000;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    /* Estado activo del menú */
+    .mobile-nav.active {
+      right: 0;
+    }
+
+    /* Botón para cerrar */
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: #333;
+      float: right;
+      cursor: pointer;
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 40px 0 0 0;
+      margin: 0;
+    }
+
+    .nav-list li {
+      margin: 20px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: #333;
+      font-size: 18px;
+      display: block;
+      padding: 8px 0;
+    }
+
+    /* Fondo oscuro para cerrar al tocar fuera */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 999;
+    }
+
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Contenido de prueba */
+    main {
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h2>Mi Sitio</h2>
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">☰</button>
+  </header>
+
+  <!-- Menú de Navegación Móvil -->
+  <nav class="mobile-nav" id="mobileNav">
+    <button class="close-btn" id="closeBtn" aria-label="Cerrar menú">&times;</button>
+    <ul class="nav-list">
+      <li><a href="#inicio" class="nav-link">Inicio</a></li>
+      <li><a href="#bitacora" class="nav-link">Bitácora</a></li>
+      <li><a href="#operaciones" class="nav-link">Operaciones</a></li>
+      <li><a href="#contacto" class="nav-link">Contacto</a></li>
+    </ul>
+  </nav>
+
+  <!-- Fondo sombreado -->
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <section id="inicio"><h3>Sección Inicio</h3><p>Contenido de prueba...</p></section>
+    <section id="bitacora"><h3>Sección Bitácora</h3><p>Contenido de prueba...</p></section>
+    <section id="operaciones"><h3>Sección Operaciones</h3><p>Contenido de prueba...</p></section>
+    <section id="contacto"><h3>Sección Contacto</h3><p>Contenido de prueba...</p></section>
+  </main>
+
+  <!-- El script colocado al final garantiza que el HTML ya cargó completamente -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.getElementById('menuToggle');
+      const mobileNav = document.getElementById('mobileNav');
+      const closeBtn = document.getElementById('closeBtn');
+      const overlay = document.getElementById('overlay');
+      const navLinks = document.querySelectorAll('.nav-link');
+
+      function openMenu() {
+        mobileNav.classList.add('active');
+        overlay.classList.add('active');
+      }
+
+      function closeMenu() {
+        mobileNav.classList.remove('active');
+        overlay.classList.remove('active');
+      }
+
+      // Eventos para abrir y cerrar
+      menuToggle.addEventListener('click', openMenu);
+      closeBtn.addEventListener('click', closeMenu);
+      overlay.addEventListener('click', closeMenu);
+
+      // Cierre automático del menú al presionar cualquier enlace
+      navLinks.forEach(link => {
+        link.addEventListener('click', closeMenu);
+      });
+    });
+  </script>
+</body>
+</html>
